@@ -15,8 +15,8 @@ const videoSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  videoPath: {
-    type: String,
+  fileId: {
+    type: mongoose.Schema.Types.ObjectId,
     required: true
   },
   uploadedAt: {

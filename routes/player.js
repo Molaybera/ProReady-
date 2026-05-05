@@ -9,16 +9,24 @@ const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Multer storage for video uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // Appending extension
+const { GridFsStorage } = require('multer-gridfs-storage');
+
+// GridFS storage for video uploads
+const storage = new GridFsStorage({
+  url: process.env.MONGODB_URI || 'mongodb://localhost:27017/match_ready',
+  options: { useNewUrlParser: true, useUnifiedTopology: true },
+  file: (req, file) => {
+    return {
+      bucketName: 'videos',
+      filename: `${Date.now()}-${file.originalname}`
+    };
   }
 });
-const upload = multer({ storage: storage });
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
 
 // Protect all player routes
 router.use(authMiddleware);
@@ -99,7 +107,7 @@ router.post('/videos', upload.single('video'), async (req, res) => {
       title,
       description,
       sport,
-      videoPath: `/uploads/${req.file.filename}`
+      fileId: req.file.id
     });
 
     await video.save();
