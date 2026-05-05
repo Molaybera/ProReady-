@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ProReady — Match Performance & Scouting</title>
+<meta name="description" content="ProReady: Adaptive match preparation planner and scouting platform."/>
+<link rel="stylesheet" href="css/styles.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- ════════════════ AUTH VIEW (Login / Register) ════════════════ -->
+<div id="auth-view" class="auth-overlay">
+  <div class="auth-box">
+    <h2 class="auth-title">Welcome to ProReady</h2>
+    <p class="auth-sub" id="auth-subtitle">Login to your account</p>
+    
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login">Login</button>
+      <button class="auth-tab" id="tab-register">Register</button>
+    </div>
+
+    <form id="auth-form">
+      <div id="register-fields" class="hidden">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" id="auth-name" placeholder="John Doe"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <select class="form-select" id="auth-role">
+            <option value="player">Player</option>
+            <option value="coach">Coach</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="auth-email" placeholder="john@example.com" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="auth-password" placeholder="••••••••" required/>
+      </div>
+
+      <button type="submit" class="btn-primary" style="width:100%;justify-content:center" id="auth-submit">Login</button>
+    </form>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="app-shell hidden" id="app-shell">
+  <!-- ════════════════ SIDEBAR ════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-title">🏅 ProReady</div>
+      <div class="brand-sub">Performance Planner</div>
+    </div>
+    
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <!-- Player Links -->
+      <div class="nav-item role-player" id="nav-dashboard">
+        <span class="nav-icon">📊</span><span>Dashboard</span>
+      </div>
+      <div class="nav-item role-player" id="nav-plan">
+        <span class="nav-icon">📅</span><span>Day Plan</span>
+      </div>
+      <div class="nav-item role-player" id="nav-report">
+        <span class="nav-icon">📝</span><span>Match Report</span>
+      </div>
+      <div class="nav-item role-player" id="nav-history">
+        <span class="nav-icon">📂</span><span>History & Graphs</span>
+      </div>
+      <div class="nav-item role-player" id="nav-upload">
+        <span class="nav-icon">🎥</span><span>Upload Video</span>
+      </div>
+      <div class="nav-item role-player" id="nav-profile">
+        <span class="nav-icon">👤</span><span>My Profile</span>
+      </div>
+
+      <!-- Coach Links -->
+      <div class="nav-item role-coach hidden" id="nav-network">
+        <span class="nav-icon">🌐</span><span>Scouting Network</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="athlete-chip" style="margin-bottom:10px; cursor:pointer;" id="btn-logout">
+        <span class="athlete-chip-sport">🚪</span>
+        <span class="athlete-chip-name">Logout</span>
+      </div>
+      <div class="athlete-chip">
+        <span class="athlete-chip-sport" id="header-sport">🏅</span>
+        <span class="athlete-chip-name" id="header-athlete-name">User</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ════════════════ MAIN ════════════════ -->
+  <div class="main-content">
+    <header class="topbar">
+      <button id="mobile-menu-toggle" class="btn-menu">☰</button>
+      <span class="topbar-title" id="topbar-label">Dashboard</span>
+      <div class="topbar-actions role-player">
+        <button class="btn-icon" id="btn-upload-video-dash" onclick="document.getElementById('nav-upload').click()">🎥 <span>Upload Video</span></button>
+        <button class="btn-primary" id="btn-new-plan">＋ <span>New Plan</span></button>
+      </div>
+    </header>
+
+    <main class="content-area">
+
+      <!-- ─────────── DASHBOARD VIEW ─────────── -->
+      <section class="view active" id="view-dashboard">
+        <div style="margin-bottom:30px; text-align:center;">
+          <h2 style="font-size:24px; font-weight:700; margin-bottom:15px;">Welcome to Match Ready</h2>
+          <div style="display:flex; justify-content:center; gap:15px;">
+            <button class="btn-primary" onclick="document.getElementById('btn-new-plan').click()">＋ Generate New Match Plan</button>
+            <button class="btn-secondary" onclick="document.getElementById('nav-plan').click()">📅 View Active Plans</button>
+            <button class="btn-secondary" onclick="document.getElementById('nav-report').click()">📝 File Match Report</button>
+          </div>
+        </div>
+        
+        <!-- My Videos -->
+        <div class="card" style="margin-top:20px;">
+          <h3 class="card-title">My Uploaded Scouting Videos</h3>
+          <p style="font-size:13px; color:var(--text-3); margin-bottom:15px;">A list of all the gameplay videos you've shared with the scouting network.</p>
+          <div id="dash-player-videos" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+      </section>
+
+      <!-- ─────────── PLAN VIEW ─────────── -->
+      <section class="view" id="view-plan">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <div>
+            <h2 style="font-size:20px;font-weight:700">📅 Active Match Plans</h2>
+            <p style="font-size:13px;color:var(--text-2);margin-top:4px">Select an active match below to view its day-by-day preparation schedule.</p>
+          </div>
+        </div>
+        <div id="plan-no-plan" class="empty-state">
+          <div class="empty-icon">📅</div>
+          <h2 style="margin-bottom:8px">No Active Plans</h2>
+          <p>Create a plan to see your preparation schedule.</p>
+          <button class="btn-primary" onclick="document.getElementById('btn-new-plan').click()">＋ Generate Match Plan</button>
+        </div>
+        <div id="active-plans-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+      </section>
+
+      <!-- ─────────── REPORT VIEW ─────────── -->
+      <section class="view" id="view-report">
+        <div class="report-layout">
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:6px">📝 Match Report</h2>
+          <p style="color:var(--text-2);font-size:14px;margin-bottom:20px">Record your match outcome and performance after the match.</p>
+
+          <div id="report-no-plan" class="empty-state hidden">
+            <div class="empty-icon">📝</div>
+            <p>You have no pending matches to report.</p>
+          </div>
+
+          <div id="report-pending-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;"></div>
+
+          <div id="report-form" class="hidden card">
+            <h3 id="report-form-title" style="margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid var(--border)"></h3>
+            <div id="report-fields">
+              <div class="form-group">
+                <label class="form-label">Match Result</label>
+                <div class="result-btn-group">
+                  <button class="result-btn" data-result="win">🏆 Win</button>
+                  <button class="result-btn" data-result="draw">🤝 Draw</button>
+                  <button class="result-btn" data-result="loss">❌ Loss</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Your Performance Rating</label>
+                <div class="slider-row">
+                  <span style="font-size:13px;color:var(--text-3)">1</span>
+                  <input type="range" id="rating-slider" min="1" max="10" value="7"/>
+                  <span style="font-size:13px;color:var(--text-3)">10</span>
+                  <span class="slider-val" id="rating-val">7</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Notes &amp; Observations</label>
+                <textarea class="form-textarea" id="report-notes" placeholder="How did the preparation go? What worked? What can be improved?"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Match Conditions</label>
+                <input type="text" class="form-input" id="report-conditions" placeholder="e.g. Rainy, hot, indoor, outdoor…"/>
+              </div>
+              <button class="btn-primary" id="btn-submit-report" style="width:100%;justify-content:center">Save Match Report ✓</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────── HISTORY & GRAPHS VIEW ─────────── -->
+      <section class="view" id="view-history">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <div>
+            <h2 style="font-size:20px;font-weight:700">📂 Match History & Analytics</h2>
+            <p style="font-size:13px;color:var(--text-2);margin-top:4px">Your past preparation plans and performance trends</p>
+          </div>
+        </div>
+        
+        <div class="card" style="margin-bottom:20px">
+          <h3 class="card-title">Performance Trend (Readiness vs Match Rating)</h3>
+          <p style="font-size:13px; color:var(--text-3); margin-bottom:15px;">
+            This graph compares how well you prepared (AI Readiness Score, Blue) against how well you actually played (Match Rating, Green). 
+            A smaller gap means your preparation is translating well to the pitch!
+          </p>
+          <canvas id="performance-chart" width="100%" height="40"></canvas>
+        </div>
+
+        <div id="history-list"></div>
+      </section>
+
+      <!-- ─────────── UPLOAD VIDEO VIEW ─────────── -->
+      <section class="view" id="view-upload">
+        <div class="report-layout">
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:6px">🎥 Upload Gameplay Video</h2>
+          <p style="color:var(--text-2);font-size:14px;margin-bottom:20px">Upload your match highlights for coaches to review.</p>
+
+          <form id="upload-form" class="card">
+            <div class="form-group">
+              <label class="form-label">Video Title</label>
+              <input type="text" class="form-input" id="upload-title" placeholder="e.g. Final Match Highlights" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea class="form-textarea" id="upload-desc" placeholder="Describe your performance..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Video File</label>
+              <input type="file" class="form-input" id="upload-file" accept="video/mp4,video/x-m4v,video/*" required/>
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%;justify-content:center" id="btn-upload-submit">Upload Video 🚀</button>
+          </form>
+
+          <h3 style="margin-top:30px;font-size:16px;">Your Uploaded Videos</h3>
+          <div id="player-videos-list" style="margin-top:10px; display:grid; gap:10px;"></div>
+        </div>
+      </section>
+
+      <!-- ─────────── PROFILE VIEW ─────────── -->
+      <section class="view" id="view-profile">
+        <div class="report-layout">
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:6px">👤 My Profile Settings</h2>
+          <p style="color:var(--text-2);font-size:14px;margin-bottom:20px">Update your personal information and biography.</p>
+          <div class="card">
+            <form id="profile-form">
+              <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-input" id="profile-name" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-input" id="profile-email" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Biography / Achievements</label>
+                <textarea class="form-textarea" id="profile-bio" rows="5" placeholder="Tell coaches about your playing style, history, and achievements..."></textarea>
+              </div>
+              <button type="submit" class="btn-primary" id="btn-profile-submit" style="width:100%;justify-content:center">Save Changes</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────── NETWORK VIEW (COACH) ─────────── -->
+      <section class="view" id="view-network">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div>
+            <h2 style="font-size:20px;font-weight:700;margin-bottom:6px">🌐 Scouting Network</h2>
+            <p style="color:var(--text-2);font-size:14px;">Browse gameplay videos uploaded by players.</p>
+          </div>
+          <div>
+            <select id="network-sport-filter" class="form-select" onchange="filterNetwork()">
+              <option value="all">All Sports</option>
+              <option value="football">Football</option>
+              <option value="cricket">Cricket</option>
+            </select>
+          </div>
+        </div>
+        <div id="network-list" class="dash-grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ════════════════ COMPARE/PROFILE/PLAN MODALS ════════════════ -->
+<div id="compare-modal" class="hidden"></div>
+<div id="coach-player-modal" class="hidden"></div>
+
+<div id="plan-details-modal" class="hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-box" style="max-width: 1000px; padding:20px; overflow-y:auto; max-height:95vh;">
+    <button class="modal-close" onclick="document.getElementById('plan-details-modal').classList.add('hidden')">✕</button>
+    <div id="special-message" class="match-day-banner hidden" style="margin-bottom:20px"></div>
+    <div class="dash-grid" style="grid-template-columns: 320px 1fr; gap:20px; align-items:start;">
+      <div class="dash-left">
+        <div class="card gauge-card" style="margin-bottom:20px">
+          <div class="sport-row">
+            <span id="sport-badge">⚽</span>
+            <span id="match-countdown">—</span>
+          </div>
+          <canvas id="readiness-canvas" width="240" height="200"></canvas>
+          <div id="readiness-status"></div>
+          <div class="card-title" style="margin-top:8px">Sub-Scores</div>
+          <div id="sub-sleep"></div>
+          <div id="sub-fatigue"></div>
+          <div id="sub-training"></div>
+        </div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title">⚠️ Active Alerts</div>
+          <div id="alerts-container"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">💡 Preparation Insights</div>
+          <div id="insights-container" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+      </div>
+      <div class="dash-right">
+        <h2 style="font-size:18px;font-weight:700;margin-bottom:16px">Day-by-Day Plan</h2>
+        <div class="day-tabs-wrap"><div id="day-tabs"></div></div>
+        <div id="day-panel"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ WIZARD OVERLAY ════════════════ -->
+<div class="wizard-overlay hidden" id="wizard-overlay">
+  <div class="wizard-box">
+    <button class="wizard-close" id="wizard-close">✕</button>
+    <h2 class="wizard-title">Generate Match Plan</h2>
+    <p class="wizard-sub">Complete these steps to get your personalised readiness plan</p>
+    <div class="progress-dots">
+      <div class="progress-dot active"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+
+    <!-- Step 1: Match Date & Sport -->
+    <div class="wizard-step active" id="step-1">
+      <div class="form-group">
+        <label class="form-label">Sport</label>
+        <select class="form-select" id="wizard-sport">
+          <option value="football">Football</option>
+          <option value="cricket">Cricket</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Match Date</label>
+        <input type="date" class="form-input" id="match-date"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Match Time</label>
+        <input type="time" class="form-input" id="match-time" value="15:00"/>
+      </div>
+      <p style="font-size:12.5px;color:var(--text-3);margin-top:-8px">
+        The system will generate a plan from today through match day.
+      </p>
+    </div>
+
+    <!-- Step 2: Daily Schedule -->
+    <div class="wizard-step" id="step-2">
+      <div class="form-group">
+        <label class="form-label">Your Daily Commitment</label>
+        <select class="form-select" id="schedule-hours">
+          <option value="none">No fixed commitments</option>
+          <option value="9 AM–1 PM">College / Work: 9 AM – 1 PM</option>
+          <option value="9 AM–5 PM">College / Work: 9 AM – 5 PM</option>
+          <option value="10 AM–4 PM">College / Work: 10 AM – 4 PM</option>
+          <option value="2 PM–8 PM">College / Work: 2 PM – 8 PM</option>
+          <option value="Evening only">Only free in evenings</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Step 3: Daily Status -->
+    <div class="wizard-step" id="step-3">
+      <div class="form-group">
+        <label class="form-label">Average Sleep Hours</label>
+        <div class="slider-row">
+          <span style="font-size:13px;color:var(--text-3)">4h</span>
+          <input type="range" id="sleep-hours" min="4" max="10" step="0.5" value="7"/>
+          <span class="slider-val" id="sleep-val">7h</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Muscle Soreness</label>
+        <div class="pill-group">
+          <button class="soreness-option" data-val="low">🟢 Low</button>
+          <button class="soreness-option" data-val="medium">🟡 Medium</button>
+          <button class="soreness-option" data-val="high">🔴 High</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Training Intensity</label>
+        <div class="pill-group">
+          <button class="intensity-option" data-val="low">⬇️ Low</button>
+          <button class="intensity-option" data-val="medium">➡️ Medium</button>
+          <button class="intensity-option" data-val="high">⬆️ High</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="wizard-footer">
+      <button class="btn-secondary" id="wizard-back" style="display:none">← Back</button>
+      <div></div>
+      <button class="btn-primary" id="wizard-next">Next →</button>
+      <button class="btn-primary" id="wizard-finish" style="display:none">Generate Plan 🚀</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
