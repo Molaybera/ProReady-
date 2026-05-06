@@ -31,6 +31,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/player', playerRoutes);
 app.use('/api/coach', coachRoutes);
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('SERVER ERROR:', err);
+  res.status(500).json({ error: err.message || 'Internal Server Error' });
+});
+
 // Database connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/match_ready')
 .then(() => console.log('MongoDB Connected'))

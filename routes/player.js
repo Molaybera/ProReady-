@@ -56,6 +56,7 @@ router.put('/profile', async (req, res) => {
     
     res.json(userObj);
   } catch (err) {
+    console.error('Profile Update Error:', err);
     res.status(500).json({ error: 'Error updating profile' });
   }
 });
@@ -67,6 +68,7 @@ router.post('/plans', async (req, res) => {
     await plan.save();
     res.status(201).json(plan);
   } catch (err) {
+    console.error('Save Plan Error:', err);
     res.status(500).json({ error: 'Error saving plan' });
   }
 });
@@ -76,6 +78,7 @@ router.get('/plans', async (req, res) => {
     const plans = await Plan.find({ userId: req.user.id }).sort({ generatedAt: -1 });
     res.json(plans);
   } catch (err) {
+    console.error('Fetch Plans Error:', err);
     res.status(500).json({ error: 'Error fetching plans' });
   }
 });
@@ -87,6 +90,7 @@ router.post('/reports', async (req, res) => {
     await report.save();
     res.status(201).json(report);
   } catch (err) {
+    console.error('Save Report Error:', err);
     res.status(500).json({ error: 'Error saving report' });
   }
 });
@@ -96,6 +100,7 @@ router.get('/reports', async (req, res) => {
     const reports = await Report.find({ userId: req.user.id }).populate('planId').sort({ savedAt: -1 });
     res.json(reports);
   } catch (err) {
+    console.error('Fetch Reports Error:', err);
     res.status(500).json({ error: 'Error fetching reports' });
   }
 });
@@ -119,6 +124,7 @@ router.post('/videos', upload.single('video'), async (req, res) => {
     await video.save();
     res.status(201).json(video);
   } catch (err) {
+    console.error('Video Upload Error:', err);
     res.status(500).json({ error: 'Error uploading video' });
   }
 });
@@ -128,6 +134,7 @@ router.get('/videos', async (req, res) => {
     const videos = await Video.find({ uploader: req.user.id }).sort({ uploadedAt: -1 });
     res.json(videos);
   } catch (err) {
+    console.error('Fetch Videos Error:', err);
     res.status(500).json({ error: 'Error fetching videos' });
   }
 });
