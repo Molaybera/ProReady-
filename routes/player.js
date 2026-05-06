@@ -7,20 +7,24 @@ const Report = require('../models/Report');
 const Video = require('../models/Video');
 const User = require('../models/User');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const router = express.Router();
 
-const { GridFsStorage } = require('multer-gridfs-storage');
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-// GridFS storage for video uploads
-const storage = new GridFsStorage({
-  url: process.env.MONGODB_URI || 'mongodb://localhost:27017/match_ready',
-  options: { useUnifiedTopology: true },
-  file: (req, file) => {
-    return {
-      bucketName: 'videos',
-      filename: `${Date.now()}-${file.originalname}`
-    };
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'proready_videos',
+    resource_type: 'video',
+    allowed_formats: ['mp4', 'mov', 'avi']
   }
 });
 
@@ -108,7 +112,8 @@ router.post('/videos', upload.single('video'), async (req, res) => {
       title,
       description,
       sport,
-      fileId: req.file.id
+      videoUrl: req.file.path,
+      publicId: req.file.filename
     });
 
     await video.save();

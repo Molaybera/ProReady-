@@ -443,7 +443,7 @@ async function loadPlayerVideos() {
     const videos = await API.getPlayerVideos();
     const html = videos.map(v => `
       <div class="video-card">
-        <video src="/api/video/${v.fileId}" controls class="video-player"></video>
+        <video src="${v.videoUrl}" controls class="video-player"></video>
         <div class="video-info">
           <div class="video-title">${v.title}</div>
           <div class="video-desc">${v.description || ''}</div>
@@ -472,8 +472,8 @@ window.filterNetwork = function() {
   const filtered = filter === 'all' ? allNetworkVideos : allNetworkVideos.filter(v => v.sport === filter);
   
   container.innerHTML = filtered.map(v => `
-    <div class="video-card coach-video-card" onclick="openPlayerProfile('${v.uploader._id}', '/api/video/${v.fileId}', '${v.title}')">
-      <video src="/api/video/${v.fileId}" class="video-player" muted onmouseover="this.play()" onmouseout="this.pause()"></video>
+    <div class="video-card coach-video-card" onclick="openPlayerProfile('${v.uploader._id}', '${v.videoUrl}', '${v.title}')">
+      <video src="${v.videoUrl}" class="video-player" muted onmouseover="this.play()" onmouseout="this.pause()"></video>
       <div class="video-info">
         <div class="video-title">${v.title}</div>
         <div class="video-uploader"><span>${v.uploader.name}</span><span>${v.sport==='football'?'⚽':'🏏'}</span></div>
