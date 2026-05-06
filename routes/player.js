@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const Plan = require('../models/Plan');
@@ -13,8 +14,14 @@ const { GridFsStorage } = require('multer-gridfs-storage');
 
 // GridFS storage for video uploads
 const storage = new GridFsStorage({
-  url: process.env.MONGODB_URI || 'mongodb://localhost:27017/match_ready',
-  options: { useNewUrlParser: true, useUnifiedTopology: true },
+  db: new Promise((resolve, reject) => {
+    if (mongoose.connection.readyState === 1) {
+      resolve(mongoose.connection.db);
+    } else {
+      mongoose.connection.once('open', () => resolve(mongoose.connection.db));
+      mongoose.connection.on('error', reject);
+    }
+  }),
   file: (req, file) => {
     return {
       bucketName: 'videos',

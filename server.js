@@ -30,6 +30,9 @@ mongoose.connection.once('open', () => {
 // Video Streaming Route
 app.get('/api/video/:id', async (req, res) => {
   try {
+    if (!gfs) {
+      return res.status(503).send('Storage service is initializing, please refresh in a moment.');
+    }
     const fileId = new mongoose.Types.ObjectId(req.params.id);
     
     // Check if file exists and get metadata
