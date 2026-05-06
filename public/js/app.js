@@ -297,17 +297,18 @@ function refreshHistory() {
     const dateFmt = new Date(p.matchDate).toLocaleDateString('en-IN', { day:'numeric', month:'short' });
 
     return `
-      <div class="history-card" data-id="${p._id}">
+      <div class="history-card" data-id="${p._id}" onclick="openMatchDetailModal('${p._id}')">
         <div class="hc-sport">${p.sport === 'football'?'⚽':'🏏'}</div>
         <div class="hc-info">
           <div class="hc-match-date">📅 ${dateFmt}</div>
+          <div style="font-size:12px; color:var(--text-3); margin-top:4px;">Readiness: ${p.readiness_score}</div>
         </div>
         <div class="hc-score" style="color:${scoreColor}">
           <span class="hc-score-num">${p.readiness_score}</span>
           <span class="hc-score-lbl">Readiness</span>
         </div>
         <div class="hc-footer">${resultBadge}</div>
-        <div class="hc-actions" style="display:flex;gap:8px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+        <div class="hc-actions" style="display:flex;gap:8px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;" onclick="event.stopPropagation()">
           <button class="btn-icon" style="flex:1" onclick="sharePlan('${p._id}')">⬆️ Share</button>
           <button class="btn-icon" style="flex:1" onclick="downloadPlanPDF('${p._id}')">⬇️ Download PDF</button>
         </div>
@@ -317,6 +318,127 @@ function refreshHistory() {
 
   renderPerformanceChart();
 }
+
+window.openMatchDetailModal = function(planId) {
+  const plan = state.plans.find(p => p._id === planId);
+  if (!plan) return;
+  const rep = state.reports.find(r => r.planId?._id === planId || r.planId === planId);
+  
+  const modal = document.getElementById('history-detail-modal');
+  const scoreColor = plan.readiness_score >= 76 ? '#2f9e44' : plan.readiness_score >= 51 ? '#f59f00' : '#e03131';
+  
+  const reportHTML = rep ? `
+    <div class="card" style="background:var(--bg-highlight); border:1px solid var(--primary);">
+      <h3 style="margin-bottom:10px; font-size:16px;">Match Result: <span class="result-badge result-${rep.result}">${rep.result.toUpperCase()}</span></h3>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:10px;">
+        <div>
+          <div style="font-size:12px; color:var(--text-3); text-transform:uppercase;">Performance Rating</div>
+          <div style="font-size:24px; font-weight:800; color:var(--primary);">${rep.rating}/10</div>
+        </div>
+        <div>
+          <div style="font-size:12px; color:var(--text-3); text-transform:uppercase;">Conditions</div>
+          <div style="font-size:14px; font-weight:600;">${rep.conditions || 'N/A'}</div>
+        </div>
+      </div>
+      <div style="margin-top:15px;">
+        <div style="font-size:12px; color:var(--text-3); text-transform:uppercase;">Notes & Observations</div>
+        <p style="font-size:14px; color:var(--text-2); line-height:1.5; margin-top:5px;">${rep.notes || 'No notes provided.'}</p>
+      </div>
+    </div>
+  ` : `
+    <div class="card" style="text-align:center; padding:30px;">
+      <p style="color:var(--text-3);">No match report filed for this plan yet.</p>
+      <button class="btn-primary" style="margin-top:10px;" onclick="document.getElementById('history-detail-modal').classList.add('hidden'); showView('report');">File Report Now</button>
+    </div>
+  `;
+
+  modal.innerHTML = `
+    <div class="modal-backdrop"></div>
+    <div class="modal-box" style="max-width: 800px; padding:0; overflow:hidden; display:flex; flex-direction:column; max-height:90vh;">
+      <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--bg-card);">
+        <h2 class="modal-title" style="margin:0; font-size:20px;">Match Details — ${new Date(plan.matchDate).toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'})}</h2>
+        <button class="modal-close" style="position:static;" onclick="document.getElementById('history-detail-modal').classList.add('hidden')">✕</button>
+      </div>
+      
+      <div style="padding:20px; overflow-y:auto; flex:1; background:var(--bg-body);">
+        <div class="dash-grid" style="grid-template-columns: 1fr 1.2fr; gap:20px; align-items:start;">
+          <!-- Left: Stats -->
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="card" style="text-align:center;">
+              <h4 style="margin-bottom:10px; color:var(--text-3); font-size:12px; text-transform:uppercase;">Readiness Score</h4>
+              <div style="font-size:48px; font-weight:800; color:${scoreColor};">${plan.readiness_score}</div>
+              <p style="font-size:12px; color:var(--text-3); margin-top:5px;">Based on pre-match preparation</p>
+            </div>
+            
+            <div class="card">
+              <h3 style="margin-bottom:15px; font-size:15px; border-bottom:1px solid var(--border); padding-bottom:8px;">Prep Metrics</h3>
+              <div id="modal-sub-scores" style="display:flex; flex-direction:column; gap:12px;"></div>
+            </div>
+
+            ${reportHTML}
+          </div>
+
+          <!-- Right: Graph -->
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="card">
+              <h3 style="margin-bottom:15px; font-size:15px; border-bottom:1px solid var(--border); padding-bottom:8px;">Performance Comparison</h3>
+              <canvas id="match-detail-chart" width="100%" height="80"></canvas>
+              <div style="margin-top:15px; font-size:12px; color:var(--text-3); line-height:1.4;">
+                <p>This graph compares your <strong>Planned Readiness (${plan.readiness_score})</strong> against your <strong>Actual Performance (${rep ? rep.rating * 10 : 0})</strong>.</p>
+              </div>
+            </div>
+            
+            <div class="card">
+              <h3 style="margin-bottom:10px; font-size:15px;">Preparation Alerts</h3>
+              <div id="modal-alerts"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="padding:15px 20px; border-top:1px solid var(--border); background:var(--bg-card); display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn-secondary" onclick="document.getElementById('history-detail-modal').classList.add('hidden')">Close</button>
+        <button class="btn-primary" onclick="downloadPlanPDF('${plan._id}')">Download Report PDF</button>
+      </div>
+    </div>
+  `;
+  
+  modal.classList.remove('hidden');
+  
+  // Render Sub-scores
+  const subContainer = document.getElementById('modal-sub-scores');
+  subContainer.innerHTML = '<div id="m-sub-sleep"></div><div id="m-sub-recovery"></div><div id="m-sub-training"></div>';
+  drawSubScoreBar(document.getElementById('m-sub-sleep'), plan.sub_scores.sleepScore, '😴 Sleep', '#2563eb');
+  drawSubScoreBar(document.getElementById('m-sub-recovery'), plan.sub_scores.fatigueScore, '💪 Recovery', '#0891b2');
+  drawSubScoreBar(document.getElementById('m-sub-training'), plan.sub_scores.intensityScore, '🏋️ Training', '#7048e8');
+
+  // Render Alerts
+  renderAlerts(plan.alerts, document.getElementById('modal-alerts'));
+
+  // Render Small Chart
+  const ctx = document.getElementById('match-detail-chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Readiness', 'Performance'],
+      datasets: [{
+        label: 'Score',
+        data: [plan.readiness_score, rep ? rep.rating * 10 : 0],
+        backgroundColor: [scoreColor, '#16a34a'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      scales: { x: { min: 0, max: 100 } },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  modal.querySelector('.modal-backdrop').addEventListener('click', () => modal.classList.add('hidden'));
+};
+
 
 function renderPerformanceChart() {
   const canvas = document.getElementById('performance-chart');
