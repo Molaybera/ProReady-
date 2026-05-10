@@ -38,6 +38,17 @@ const API = {
   },
 
   // --- Player ---
+  async analyzePrep(inputs, history) {
+    const res = await fetch(`${API_BASE}/player/generate-plan`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ inputs, history })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
+  },
+
   async savePlan(plan) {
     const res = await fetch(`${API_BASE}/player/plans`, {
       method: 'POST',

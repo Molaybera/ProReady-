@@ -801,10 +801,13 @@ async function finishWizard() {
   state.wizardData.soreness = document.querySelector('.soreness-option.selected')?.dataset.val || 'low';
   state.wizardData.intensity = document.querySelector('.intensity-option.selected')?.dataset.val || 'medium';
   
-  const planData = generatePlan({ ...state.wizardData, history: state.plans });
+  const btn = document.getElementById('wizard-finish');
+  const originalText = btn.textContent;
+  btn.textContent = 'Generating AI Plan...';
+  btn.disabled = true;
   
   try {
-    const savedPlan = await API.savePlan(planData);
+    const savedPlan = await API.analyzePrep(state.wizardData, state.plans);
     
     // Update user sport globally based on what they just selected
     state.user.sport = state.wizardData.sport;
@@ -814,8 +817,13 @@ async function finishWizard() {
     state.currentPlan = savedPlan;
     closeWizard();
     showView('dashboard');
-    showToast('Plan generated successfully!');
-  } catch(err) { showToast(err.message, 'error'); }
+    showToast('AI Plan generated successfully! ✨');
+  } catch(err) { 
+    showToast(err.message, 'error'); 
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 }
 
 // ── Event Listeners ──────────────────────────────────────────

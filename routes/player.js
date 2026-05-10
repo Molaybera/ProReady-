@@ -10,6 +10,8 @@ const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
+const { generatePreparationPlan } = require('../utils/ai');
+
 const router = express.Router();
 
 // Cloudinary configuration
@@ -136,6 +138,35 @@ router.get('/videos', async (req, res) => {
   } catch (err) {
     console.error('Fetch Videos Error:', err);
     res.status(500).json({ error: 'Error fetching videos' });
+  }
+});
+
+// --- AI Plan Generation ---
+router.post('/generate-plan', async (req, res) => {
+  try {
+    const { inputs, history } = req.body;
+    
+    // Call Gemini API
+    const aiPlan = await generatePreparationPlan(inputs, history);
+    
+    // Create Plan model
+    const plan = new Plan({
+      userId: req.user.id,
+      sport: inputs.sport,
+      matchDate: new Date(inputs.matchDate),
+      inputs,
+      readiness_score: aiPlan.readiness_score,
+      sub_scores: aiPlan.sub_scores,
+      insights: aiPlan.insights,
+      alerts: aiPlan.alerts,
+      days: aiPlan.days
+    });
+    
+    await plan.save();
+    res.status(201).json(plan);
+  } catch (err) {
+    console.error('Generate Plan Error:', err);
+    res.status(500).json({ error: 'Error generating AI plan' });
   }
 });
 
