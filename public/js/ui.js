@@ -70,41 +70,60 @@ function renderDayTabs(days, activeIndex, onSelect) {
   });
 }
 
-// ── Time Block Card ───────────────────────────────────────────
+// ── Dashboard Time Row ───────────────────────────────────────────
 function buildTimeCard(slot, data, sport) {
   const meta = {
-    morning:   { label: 'Morning',   icon: '🌅', cls: 'morning'   },
-    afternoon: { label: 'Afternoon', icon: '☀️', cls: 'afternoon' },
-    evening:   { label: 'Evening',   icon: '🌆', cls: 'evening'   },
-    night:     { label: 'Night',     icon: '🌙', cls: 'night'     },
+    morning:   { label: 'Morning',   time: '08:00 AM', icon: '🌅', cls: 'morning'   },
+    afternoon: { label: 'Afternoon', time: '01:00 PM', icon: '☀️', cls: 'afternoon' },
+    evening:   { label: 'Evening',   time: '06:00 PM', icon: '🌆', cls: 'evening'   },
+    night:     { label: 'Night',     time: '09:00 PM', icon: '🌙', cls: 'night'     },
   }[slot];
 
-  const tags = (data.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+  const tags = (data.tags || []).map(t => `<span class="dash-tag">${t}</span>`).join('');
+  
+  // Calculate stroke dashoffset for a sleek circular progress or use a clean horizontal bar
   const intensityBar = data.intensity > 0
-    ? `<div class="intensity-bar"><div class="intensity-fill" style="width:${data.intensity}%"></div><span>${data.intensity}%</span></div>`
-    : `<div class="intensity-bar rest"><span>Rest / Recovery</span></div>`;
+    ? `<div class="dash-intensity-wrap">
+         <div class="dash-intensity-label">Intensity <span>${data.intensity}%</span></div>
+         <div class="dash-intensity-bar"><div class="dash-intensity-fill" style="width:${data.intensity}%; background: ${data.intensity > 70 ? '#e03131' : data.intensity > 40 ? '#f59f00' : '#2f9e44'};"></div></div>
+       </div>`
+    : `<div class="dash-intensity-wrap rest">
+         <div class="dash-intensity-label">Recovery Session</div>
+       </div>`;
 
   return `
-    <div class="time-card">
-      <div class="time-card-header ${meta.cls}">
-        <span class="tc-icon">${meta.icon}</span>
-        <span class="tc-label">${meta.label}</span>
+    <div class="dash-time-row">
+      <!-- Sidebar -->
+      <div class="dash-time-sidebar ${meta.cls}">
+        <div class="dash-ts-icon">${meta.icon}</div>
+        <div class="dash-ts-label">${meta.label}</div>
+        <div class="dash-ts-time">${meta.time}</div>
       </div>
-      <div class="time-card-body">
-        <div class="tc-activity">
-          <div class="tc-field-label">Activity</div>
-          <div class="tc-field-val">${data.activity}</div>
+      
+      <!-- Content Area -->
+      <div class="dash-time-content">
+        <div class="dash-mini-cards">
+          <!-- Activity Card -->
+          <div class="dash-mini-card">
+            <div class="dash-mc-header">Activity</div>
+            <div class="dash-mc-value">${data.activity}</div>
+          </div>
+          <!-- Nutrition Card -->
+          <div class="dash-mini-card">
+            <div class="dash-mc-header">🍽️ Nutrition</div>
+            <div class="dash-mc-value">${data.food}</div>
+          </div>
+          <!-- Intensity Card -->
+          <div class="dash-mini-card dash-mc-intensity">
+            ${intensityBar}
+          </div>
         </div>
-        <div class="tc-food">
-          <div class="tc-field-label">🍽️ Nutrition</div>
-          <div class="tc-field-val">${data.food}</div>
+        
+        <!-- Notes & Tags Row -->
+        <div class="dash-notes-row">
+          <div class="dash-notes-content"><strong>📋 Notes:</strong> ${data.notes}</div>
+          <div class="dash-tags-container">${tags}</div>
         </div>
-        <div class="tc-notes">
-          <div class="tc-field-label">📋 Notes</div>
-          <div class="tc-field-val tc-note-text">${data.notes}</div>
-        </div>
-        ${intensityBar}
-        <div class="tc-tags">${tags}</div>
       </div>
     </div>
   `;
@@ -123,11 +142,11 @@ function renderDayPanel(day, sport) {
 
   container.innerHTML = `
     ${imminentBanner}${matchBanner}
-    <div class="day-header">
-      <h2 class="day-title">${day.day_label}</h2>
-      <span class="day-date-badge">${day.date}</span>
+    <div class="day-header" style="padding-bottom: 10px; border-bottom: 2px solid var(--border); margin-bottom: 20px;">
+      <h2 class="day-title" style="font-size: 24px;">${day.day_label}</h2>
+      <span class="day-date-badge" style="font-size: 14px; padding: 6px 12px;">${day.date}</span>
     </div>
-    <div class="time-grid">${cards}</div>
+    <div class="dashboard-timeline">${cards}</div>
   `;
 }
 

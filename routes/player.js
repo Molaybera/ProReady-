@@ -11,6 +11,7 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const { generatePreparationPlan } = require('../utils/ai');
+const { syncPlanToCalendar } = require('../utils/googleCalendar');
 
 const router = express.Router();
 
@@ -167,6 +168,24 @@ router.post('/generate-plan', async (req, res) => {
   } catch (err) {
     console.error('Generate Plan Error:', err);
     res.status(500).json({ error: 'Error generating AI plan' });
+  }
+});
+
+// --- Calendar Sync ---
+router.post('/sync-calendar/:planId', async (req, res) => {
+  try {
+    const plan = await Plan.findOne({ _id: req.params.planId, userId: req.user.id });
+    if (!plan) return res.status(404).json({ error: 'Plan not found' });
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const eventLinks = await syncPlanToCalendar(user, plan);
+
+    res.json({ message: 'Calendar synced successfully', eventLinks });
+  } catch (err) {
+    console.error('Calendar Sync Error:', err);
+    res.status(500).json({ error: err.message || 'Error syncing to calendar' });
   }
 });
 

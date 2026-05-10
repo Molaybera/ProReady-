@@ -828,55 +828,60 @@ async function finishWizard() {
 
 // ── Event Listeners ──────────────────────────────────────────
 function setupEventListeners() {
-  setupMobileMenu();
-  // Auth Tabs
-  document.getElementById('tab-login').onclick = () => {
-    document.getElementById('tab-login').classList.add('active');
-    document.getElementById('tab-register').classList.remove('active');
-    document.getElementById('register-fields').classList.add('hidden');
-    document.getElementById('auth-subtitle').textContent = "Login to your account";
-    document.getElementById('auth-submit').textContent = "Login";
-  };
-  document.getElementById('tab-register').onclick = () => {
-    document.getElementById('tab-register').classList.add('active');
-    document.getElementById('tab-login').classList.remove('active');
-    document.getElementById('register-fields').classList.remove('hidden');
-    document.getElementById('auth-subtitle').textContent = "Create a new account";
-    document.getElementById('auth-submit').textContent = "Register";
-  };
-
-  // Auth Submit
-  document.getElementById('auth-form').onsubmit = async (e) => {
-    e.preventDefault();
-    const isLogin = document.getElementById('tab-login').classList.contains('active');
-    const email = document.getElementById('auth-email').value;
-    const pass = document.getElementById('auth-password').value;
-    
+  // Auth with Google
+  document.getElementById('btn-google-login')?.addEventListener('click', async () => {
     try {
-      const btn = document.getElementById('auth-submit');
-      const originalText = btn.textContent;
-      btn.textContent = 'Processing...';
+      const btn = document.getElementById('btn-google-login');
+      const originalText = btn.innerHTML;
+      btn.textContent = 'Redirecting...';
       btn.disabled = true;
 
-      let res;
-      if (isLogin) {
-        res = await API.login(email, pass);
-      } else {
-        const name = document.getElementById('auth-name').value;
-        const role = document.getElementById('auth-role').value;
-        res = await API.register({ email, password: pass, name, role, sport: 'football' });
-      }
-      localStorage.setItem('token', res.token);
-      localStorage.setItem('user', JSON.stringify(res.user));
-      state.user = res.user;
-      showApp();
+      const url = await API.getGoogleAuthUrl();
+      window.location.href = url; // Redirect to Google Consent Screen
     } catch (err) {
-      alert(err.message);
-      const btn = document.getElementById('auth-submit');
-      btn.textContent = isLogin ? 'Login' : 'Register';
+      alert('Failed to initialize Google Login: ' + err.message);
+      document.getElementById('btn-google-login').disabled = false;
+    }
+  });
+
+  // Handle OAuth Callback check on page load
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  const userDataStr = urlParams.get('user');
+
+  if (token && userDataStr) {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', userDataStr);
+    
+    // Clean up URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+    
+    // Wait slightly to let init() catch it or just reload
+    window.location.reload();
+  }
+
+  // Calendar Sync
+  document.getElementById('btn-sync-calendar')?.addEventListener('click', async () => {
+    if (!state.currentPlan || !state.currentPlan._id) {
+      showToast('No active plan to sync.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btn-sync-calendar');
+    const originalText = btn.innerHTML;
+    btn.textContent = 'Syncing...';
+    btn.disabled = true;
+
+    try {
+      await API.syncCalendar(state.currentPlan._id);
+      showToast('Successfully synced to Google Calendar! 📅', 'success');
+    } catch (err) {
+      showToast('Sync Failed: ' + err.message, 'error');
+    } finally {
+      btn.innerHTML = originalText;
       btn.disabled = false;
     }
-  };
+  });
 
   // Nav
   ['dashboard','plan','report','history','upload','network','profile'].forEach(v => {

@@ -16,37 +16,15 @@
     <h2 class="auth-title">Welcome to ProReady</h2>
     <p class="auth-sub" id="auth-subtitle">Login to your account</p>
     
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login">Login</button>
-      <button class="auth-tab" id="tab-register">Register</button>
+    <div id="auth-actions" style="display:flex; justify-content:center; margin-top:20px;">
+      <button class="btn-primary" id="btn-google-login" style="width:100%; justify-content:center; padding: 12px; font-size: 16px;">
+        <span style="margin-right: 10px;">G</span> Sign in with Google
+      </button>
     </div>
-
-    <form id="auth-form">
-      <div id="register-fields" class="hidden">
-        <div class="form-group">
-          <label class="form-label">Full Name</label>
-          <input type="text" class="form-input" id="auth-name" placeholder="John Doe"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Role</label>
-          <select class="form-select" id="auth-role">
-            <option value="player">Player</option>
-            <option value="coach">Coach</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input type="email" class="form-input" id="auth-email" placeholder="john@example.com" required/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" class="form-input" id="auth-password" placeholder="••••••••" required/>
-      </div>
-
-      <button type="submit" class="btn-primary" style="width:100%;justify-content:center" id="auth-submit">Login</button>
-    </form>
+    
+    <p style="text-align:center; font-size:12px; color:var(--text-3); margin-top:15px;">
+      By signing in, you grant ProReady permission to manage your match preparation schedule on your Google Calendar.
+    </p>
   </div>
 </div>
 
@@ -296,10 +274,10 @@
 
 <div id="plan-details-modal" class="hidden">
   <div class="modal-backdrop"></div>
-  <div class="modal-box" style="max-width: 1000px; padding:20px; overflow-y:auto; max-height:95vh;">
-    <button class="modal-close" onclick="document.getElementById('plan-details-modal').classList.add('hidden')">✕</button>
+  <div class="modal-box full-screen-modal" style="max-width: 100vw; width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; margin: 0; padding: 40px; overflow-y: auto;">
+    <button class="modal-close" style="top: 20px; right: 30px; font-size: 24px;" onclick="document.getElementById('plan-details-modal').classList.add('hidden')">✕</button>
     <div id="special-message" class="match-day-banner hidden" style="margin-bottom:20px"></div>
-    <div class="dash-grid" style="grid-template-columns: 320px 1fr; gap:20px; align-items:start;">
+    <div class="dash-grid" style="grid-template-columns: 320px 1fr; gap:20px; align-items:stretch; height: 100%;">
       <div class="dash-left">
         <div class="card gauge-card" style="margin-bottom:20px">
           <div class="sport-row">
@@ -320,6 +298,10 @@
         <div class="card">
           <div class="card-title">💡 Preparation Insights</div>
           <div id="insights-container" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+        <div class="card" style="margin-top: 20px;">
+          <button class="btn-secondary" id="btn-sync-calendar" style="width:100%; justify-content:center;">📅 Sync to Google Calendar</button>
+          <p style="font-size: 12px; color: var(--text-3); text-align: center; margin-top: 10px;">Adds your day-by-day plan to your Google Calendar</p>
         </div>
       </div>
       <div class="dash-right">

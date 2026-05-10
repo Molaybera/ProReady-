@@ -15,6 +15,13 @@ function getAuthHeaders() {
 
 const API = {
   // --- Auth ---
+  async getGoogleAuthUrl() {
+    const res = await fetch(`${API_BASE}/auth/google`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data.url;
+  },
+
   async login(email, password) {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
@@ -54,6 +61,16 @@ const API = {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(plan)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    return data;
+  },
+
+  async syncCalendar(planId) {
+    const res = await fetch(`${API_BASE}/player/sync-calendar/${planId}`, {
+      method: 'POST',
+      headers: getAuthHeaders()
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
